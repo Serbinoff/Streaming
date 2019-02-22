@@ -38,8 +38,7 @@ object Streaming extends App {
     messages.foreachRDD(rdd => rdd.map(record => Utils.fromJson[KafkaRequest](record.value()))foreach(i =>
       fetchInfo(CurrencyRequest(i.price, "USD", args(0)))
         .onComplete {
-          case Success(res) => println(Utils.toJson(KafkaResponse(i.id, res.body.toDouble, args(0))))
-            producer.send(new ProducerRecord("newKafkaTopic", "key", Utils.toJson(KafkaResponse(i.id, res.body.toDouble, args(0)))))
+          case Success(res) => producer.send(new ProducerRecord("newKafkaTopic", "key", Utils.toJson(KafkaResponse(i.id, res.body.toDouble, args(0)))))
           case Failure(e) => println(s"Data fetch failed: ${e.getStackTrace}")
         })
     )
