@@ -27,7 +27,7 @@ object Streaming extends App {
       "bootstrap.servers" -> "localhost:9092",
       "key.deserializer" -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
-      "group.id" -> "use_a_separate_group_id_for_each_stream",
+      "group.id" -> "1",
       "auto.offset.reset" -> "earliest"
     )
 
@@ -35,7 +35,7 @@ object Streaming extends App {
     val messages = KafkaUtils.createDirectStream[String, String](ssc, PreferConsistent,
       Subscribe[String, String](topics, kafkaParams))
 
-    messages.foreachRDD(rdd => rdd.map(record => Utils.fromJson[KafkaRequest](record.value()))foreach(i =>
+    messages.foreachRDD(rdd => rdd.map(record => Utils.fromJson[KafkaRequest](record.value())).foreach(i =>
       fetchInfo(CurrencyRequest(i.price, "USD", args(0)))
         .onComplete {
           case Success(res) => producer.send(new ProducerRecord("newKafkaTopic", "key", Utils.toJson(KafkaResponse(i.id, res.body.toDouble, args(0)))))
@@ -53,7 +53,6 @@ object Streaming extends App {
         .header("Content-Type", "application/json")
         .header("Charset", "UTF-8")
         .option(scalaj.http.HttpOptions.readTimeout(10000)).asString
-      println(s"REST: $message")
       Future {
         blocking {
           message
@@ -63,6 +62,6 @@ object Streaming extends App {
 }
 
 case class KafkaRequest(id: Int, price: Int)
-case class KafkaResponse(id: Int, body: Double, str: String)
+case class KafkaResponse(id: Int, price: Double, currency: String)
 case class CurrencyRequest(value: Double, fromCurrency: String, toCurrency: String)
 case class CurrencyResponse(price: Int, currency: String)
