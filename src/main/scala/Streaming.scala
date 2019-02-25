@@ -12,7 +12,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, blocking}
 import scala.util.{Failure, Success}
 
+import org.apache.log4j.Logger
+
 object Streaming extends App {
+
+    lazy val logger = Logger.getLogger(getClass.getName)
 
     val props = new Properties()
     props.put("bootstrap.servers", "localhost:9092")
@@ -39,7 +43,7 @@ object Streaming extends App {
       fetchInfo(CurrencyRequest(i.price, "USD", args(0)))
         .onComplete {
           case Success(res) => producer.send(new ProducerRecord("newKafkaTopic", "key", Utils.toJson(KafkaResponse(i.id, res.body.toDouble, args(0)))))
-          case Failure(e) => println(s"Data fetch failed: ${e.getStackTrace}")
+          case Failure(e) => logger.info(s"Data fetch failed: ${e.getStackTrace}")
         })
     )
 
